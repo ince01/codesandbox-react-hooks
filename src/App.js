@@ -1,32 +1,49 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, memo, useCallback, Profiler } from "react";
 import "./styles.css";
 
-const promise = () =>
-  new Promise((resolve, reject) => {
-    setTimeout(() => resolve({ name: "xxx", email: "xxx@gmail.com" }), 1500);
-  });
-
 export default function App() {
-  const [user, setUser] = useState([{ name: "", email: "" }]);
+  const [text, setText] = useState("");
 
-  const fetchUser = async () => {
-    const res = await promise();
-    console.log(res);
-
-    setUser(res);
+  const onChange = e => {
+    setText(e.target.value);
   };
 
-  useEffect(() => {
-    fetchUser();
-    console.log("re-render");
-  }, []);
+  const callback = (id, phase) => {
+    console.log(`${id} - ${phase}`);
+  };
 
   return (
-    <li>
-      <ul>
-        <h3>{user.name}</h3>
-        <h3>{user.email}</h3>
-      </ul>
-    </li>
+    <>
+      <Profiler id="input" onRender={callback}>
+        <input type="text" value={text} onChange={onChange} />
+      </Profiler>
+      <Profiler id="Wrap" onRender={callback}>
+        <Wrap />
+      </Profiler>
+    </>
   );
 }
+
+const Wrap = memo(() => {
+  const [isChecked, setIsChecked] = useState(false);
+
+  const toggleChecked = useCallback(
+    () => setIsChecked(prevState => !prevState),
+    []
+  );
+
+  useEffect(() => {
+    console.log("re-build");
+  }, [toggleChecked]);
+
+  return <Checkbox value={isChecked} onClick={toggleChecked} />;
+});
+
+const Checkbox = memo(({ value, onClick }) => {
+  console.log("Checkbox is renderd!");
+  return (
+    <div style={{ cursor: "pointer" }} onClick={onClick}>
+      {value ? "☑" : "□"}
+    </div>
+  );
+});
