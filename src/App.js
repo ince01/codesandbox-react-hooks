@@ -1,49 +1,59 @@
-import React, { useEffect, useState, memo, useCallback, Profiler } from "react";
+import React, { useState, memo, useCallback, Profiler, useMemo } from "react";
 import "./styles.css";
+
+const onRender = (id, phase) => {
+  console.log(`${id} - ${phase}`);
+};
 
 export default function App() {
   const [text, setText] = useState("");
 
-  const onChange = e => {
+  const onChange = (e) => {
     setText(e.target.value);
   };
 
-  const callback = (id, phase) => {
-    console.log(`${id} - ${phase}`);
-  };
-
   return (
-    <>
-      <Profiler id="input" onRender={callback}>
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      <Profiler id="TextField" onRender={onRender}>
+        <label>Text field</label>
         <input type="text" value={text} onChange={onChange} />
       </Profiler>
-      <Profiler id="Wrap" onRender={callback}>
-        <Wrap />
-      </Profiler>
-    </>
+      <Wrap />
+    </div>
   );
 }
 
 const Wrap = memo(() => {
   const [isChecked, setIsChecked] = useState(false);
 
+  const [value, setValue] = useState("");
+
+  const x = useMemo(() => [1, 2], []);
+
   const toggleChecked = useCallback(
-    () => setIsChecked(prevState => !prevState),
+    () => setIsChecked((prevState) => !prevState),
     []
   );
 
-  useEffect(() => {
-    console.log("re-build");
-  }, [toggleChecked]);
+  const onWrapInputChange = useCallback((e) => {
+    setValue(e.target.value);
+  }, []);
 
-  return <Checkbox value={isChecked} onClick={toggleChecked} />;
+  return (
+    <Profiler id="Wrap" onRender={onRender}>
+      <label>Wrap</label>
+      <input type="text" onChange={onWrapInputChange} value={value} />
+      <Checkbox value={isChecked} onClick={toggleChecked} testProp={x} />
+    </Profiler>
+  );
 });
 
 const Checkbox = memo(({ value, onClick }) => {
-  console.log("Checkbox is renderd!");
   return (
-    <div style={{ cursor: "pointer" }} onClick={onClick}>
-      {value ? "☑" : "□"}
-    </div>
+    <Profiler id="Checkbox" onRender={onRender}>
+      <div style={{ cursor: "pointer" }} onClick={onClick}>
+        {value ? "☑" : "□"}
+      </div>
+    </Profiler>
   );
 });
